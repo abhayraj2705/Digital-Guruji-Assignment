@@ -31,7 +31,7 @@ app.post('/screenshot', async (req, res) => {
 
         console.log('Browser path:', browserOptions.executablePath);
         browser = await puppeteer.launch(browserOptions);
-        
+
         const page = await browser.newPage();
         await page.setViewport({ width: 1200, height: 800 });
         
