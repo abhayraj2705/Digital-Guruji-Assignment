@@ -14,18 +14,23 @@ app.post('/screenshot', async (req, res) => {
     try {
         console.log('Starting screenshot process...');
         
-        browser = await puppeteer.launch({
+        const browserOptions = {
             headless: 'new',
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-gpu'
+                '--disable-gpu',
+                '--no-first-run',
+                '--no-zygote',
+                '--single-process',
+                '--disable-extensions'
             ],
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
-        });
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome'
+        };
 
-        console.log('Browser launched successfully');
+        console.log('Browser path:', browserOptions.executablePath);
+        browser = await puppeteer.launch(browserOptions);
         
         const page = await browser.newPage();
         await page.setViewport({ width: 1200, height: 800 });
@@ -45,7 +50,8 @@ app.post('/screenshot', async (req, res) => {
         console.error('Screenshot error:', error);
         res.status(500).json({ 
             error: 'Failed to take screenshot',
-            details: error.message 
+            details: error.message,
+            path: process.env.PUPPETEER_EXECUTABLE_PATH
         });
     } finally {
         if (browser) {
