@@ -1,89 +1,48 @@
 // server.js
 const express = require('express');
 const puppeteer = require('puppeteer');
-const cors = require('cors');
 const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Add this configuration for Puppeteer on Render
-const puppeteerConfig = {
-    headless: 'new',
-    args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-extensions'
-    ],
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null
-};
-
-// Middleware
-app.use(cors());
+app.use(express.static('public'));
 app.use(express.json());
-app.use(express.static('public')); // Serve static files
 
-// Serve the HTML file
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Screenshot endpoint
 app.post('/screenshot', async (req, res) => {
-    let browser;
-    
+    let browser = null;
     try {
-        const { url } = req.body;
+        console.log('Starting screenshot process...');
         
-        if (!url) {
-            return res.status(400).json({ error: 'URL is required' });
-        }
+        browser = await puppeteer.launch({
+            headless: 'new',
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu'
+            ],
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
+        });
 
-        console.log(`Taking screenshot of: ${url}`);
-
-        // Launch puppeteer
-        browser = await puppeteer.launch(puppeteerConfig);
-
+        console.log('Browser launched successfully');
+        
         const page = await browser.newPage();
+        await page.setViewport({ width: 1200, height: 800 });
         
-        // Set viewport size
-        await page.setViewport({
-            width: 1200,
-            height: 800,
-            deviceScaleFactor: 2
-        });
-
-        // Navigate to the URL
-        await page.goto(url, {
-            waitUntil: 'networkidle2',
-            timeout: 30000
-        });
-
-        // Wait for content to load
-        await page.waitForTimeout(2000);
-
-        // Take screenshot
-        const screenshot = await page.screenshot({
-            type: 'png',
-            fullPage: true
-        });
-
-        // Set response headers
-        res.setHeader('Content-Type', 'image/png');
-        res.setHeader('Content-Disposition', 'attachment; filename="screenshot.png"');
+        const url = req.body.url;
+        console.log('Taking screenshot of:', url);
         
-        // Send screenshot
-        res.send(screenshot);
+        await page.goto(url, { waitUntil: 'networkidle0' });
+        const screenshot = await page.screenshot();
         
         console.log('Screenshot taken successfully');
+        
+        res.set('Content-Type', 'image/png');
+        res.send(screenshot);
 
     } catch (error) {
-        console.error('Error taking screenshot:', error);
+        console.error('Screenshot error:', error);
         res.status(500).json({ 
             error: 'Failed to take screenshot',
             details: error.message 
@@ -91,16 +50,11 @@ app.post('/screenshot', async (req, res) => {
     } finally {
         if (browser) {
             await browser.close();
+            console.log('Browser closed');
         }
     }
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({ status: 'OK', message: 'Screenshot service is running' });
-});
-
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log('Screenshot service is ready!');
+    console.log(`Server running on port ${PORT}`);
 });
