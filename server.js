@@ -8,10 +8,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Add this configuration for Puppeteer on Render
-const puppeteerConfig = process.env.NODE_ENV === 'production' 
-  ? {
-      headless: 'new',
-      args: [
+const puppeteerConfig = {
+    headless: 'new',
+    args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
@@ -20,16 +19,9 @@ const puppeteerConfig = process.env.NODE_ENV === 'production'
         '--no-zygote',
         '--single-process',
         '--disable-extensions'
-      ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null
-    }
-  : {
-      headless: 'new',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox'
-      ]
-    };
+    ],
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null
+};
 
 // Middleware
 app.use(cors());
