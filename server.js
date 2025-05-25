@@ -26,7 +26,8 @@ app.post('/screenshot', async (req, res) => {
                 '--single-process',
                 '--disable-extensions'
             ],
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable'
+            // Use the environment variable; fallback now changed accordingly
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome'
         };
 
         console.log('Browser path:', browserOptions.executablePath);
