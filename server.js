@@ -1,4 +1,4 @@
-// server.js
+
 const express = require('express');
 const puppeteer = require('puppeteer');
 const path = require('path');
@@ -26,7 +26,7 @@ app.post('/screenshot', async (req, res) => {
                 '--single-process',
                 '--disable-extensions'
             ],
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome'
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable'
         };
 
         console.log('Browser path:', browserOptions.executablePath);
